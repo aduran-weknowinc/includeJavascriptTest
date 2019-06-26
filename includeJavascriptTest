@@ -1,0 +1,102 @@
+from html.parser import HTMLParser
+import requests
+
+#
+# This program checks to see if the target url contains the
+# same script data and script name
+# as the source_script_name and source_script_url
+#
+###########################################################################################
+# Only update the following variables for the test case
+# Name of the file script name
+# Full url of the script_data
+# Full url to check for the inclusion of the script
+###########################################################################################
+# The script name that needs to be in the target url
+script_name = 'swap.js'
+
+# The full url of the script
+script_url = 'https://cdn.callrail.com/companies/165647354/24037759a38711ca8457/12/swap.js'
+
+# The target url to check
+target_url = 'https://www.wfscorp.com/en'
+
+###########################################################################################
+
+PASSED = 'PASSED\n'
+FAILED = 'FAILED\n'
+TOTAL_VALID_TESTS = 2
+total_tests = 0
+
+
+# Class inherits HTMLParser
+class script_include_test(HTMLParser):
+    script_name = ''
+    script_url = ''
+    script_data = ''
+    script_data_len = 0
+    target_data_len = 0
+    data_to_check = ''
+
+    # Constructor
+    def __init__(self, script_name, script_url):
+        super().__init__()
+        self.script_name = script_name
+        self.script_url = script_url
+        self.script_data = requests.get(script_url).content
+        self.script_data_len = len(self.script_data)
+
+# Handle all the start tags
+
+    def handle_starttag(self, tag, attrs):
+        # Check to see if we have javascript
+        if (tag == 'script'):
+            # Extract all attributes of script definitions in a dictionary
+            lookup_table = dict(attrs)
+            # Check for external references matching the script name
+            if (lookup_table.get('src') is not None and str(
+                    lookup_table.get('src')).__contains__(self.script_name)):
+                print("Found an include with the name of " + self.script_name)
+                print("Retrieving include " + self.script_name)
+                try:
+                    self.data_to_check = requests.get(
+                        lookup_table.get('src')).content
+                    self.target_data_len = len(self.data_to_check)
+                except Exception as e:
+                    self.data_to_check = ''
+                    self.target_data_len = 0
+                    self.error = str(e)
+
+                print("Retrieved " + str(self.target_data_len) +
+                      " bytes from target html")
+
+        #print("Requirement script total length......" + str(len(self.script_data)))
+
+    def test(self):
+        if (self.error is not None):
+            try:
+                assert (self.data_to_check == self.script_data
+                        and self.script_data_len == self.target_data_len)
+                print(PASSED)
+                return 1
+            except Exception as e:
+                print(FAILED + "/Error retrieving script:" + self.error +
+                      "/Test case result:" + str(e))
+                return 0
+
+
+# This test case should always be true
+assert_true_html = '<html><head><script type="text/javascript" src="' + script_url + '"></script></head><body></body></html>'
+
+parser = script_include_test(script_name, script_url)
+parser.feed(assert_true_html)
+total_tests += parser.test()
+
+# This checks the target_url to pass the test
+target_data = requests.get(target_url)
+parser = script_include_test(script_name, script_url)
+print("Checking target url........" + target_url + " for " + script_name)
+parser.feed(str(target_data.content))
+total_tests += parser.test()
+
+print(str(total_tests) + " out of " + str(TOTAL_VALID_TESTS) + " " + PASSED)
