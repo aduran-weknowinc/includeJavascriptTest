@@ -59,8 +59,10 @@ class script_include_test(HTMLParser):
                 print("Found an include with the name of " + self.script_name)
                 print("Retrieving include " + self.script_name)
                 try:
-                    self.data_to_check = requests.get(
-                        'https://' + lookup_table.get('src')).content
+                    if (lookup_table.get('src').__contains__('https')):
+                      self.data_to_check = requests.get(lookup_table.get('src')).content
+                    else:
+                      self.data_to_check = requests.get('https:' + lookup_table.get('src')).content
                     self.target_data_len = len(self.data_to_check)
                 except Exception as e:
                     self.data_to_check = ''
@@ -90,13 +92,13 @@ assert_true_html = '<html><head><script type="text/javascript" src="' + script_u
 
 parser = script_include_test(script_name, script_url)
 parser.feed(assert_true_html)
-total_tests += parser.test()
+total_tests = total_tests + parser.test()
 
 # This checks the target_url to pass the test
 target_data = requests.get(target_url)
 parser = script_include_test(script_name, script_url)
 print("Checking target url........" + target_url + " for " + script_name)
 parser.feed(str(target_data.content))
-total_tests += parser.test()
+total_tests = total_tests + parser.test()
 
 print(str(total_tests) + " out of " + str(TOTAL_VALID_TESTS) + " " + PASSED)
