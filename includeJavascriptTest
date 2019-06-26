@@ -19,7 +19,7 @@ script_name = 'swap.js'
 script_url = 'https://cdn.callrail.com/companies/165647354/24037759a38711ca8457/12/swap.js'
 
 # The target url to check
-target_url = 'https://www.wfscorp.com/en'
+target_url = 'https://www.microsoft.com'
 
 ###########################################################################################
 
@@ -82,8 +82,7 @@ class script_include_test(HTMLParser):
                 print(PASSED)
                 return 1
             except Exception as e:
-                print(FAILED + "/Error retrieving script:" + self.error +
-                      "/Test case result:" + str(e))
+                print(FAILED + "Error retrieving script" )
                 return 0
 
 
