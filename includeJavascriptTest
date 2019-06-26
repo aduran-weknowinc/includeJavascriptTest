@@ -60,7 +60,7 @@ class script_include_test(HTMLParser):
                 print("Retrieving include " + self.script_name)
                 try:
                     self.data_to_check = requests.get(
-                        lookup_table.get('src')).content
+                        'https://' + lookup_table.get('src')).content
                     self.target_data_len = len(self.data_to_check)
                 except Exception as e:
                     self.data_to_check = ''
